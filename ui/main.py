@@ -12,7 +12,9 @@ if not api_key:
     raise ValueError("Please set OPENAI_API_KEY")
 
 st.set_page_config(layout="wide")
-st.sidebar.header("Agentic IDE")
+st.sidebar.header("Currently Supports FrontEnd WebApp Development For MVP")
+
+st.title("Lightweight LangChain based Web IDE")
 
 # Session state
 if "frontend_files" not in st.session_state:
@@ -23,10 +25,10 @@ if "spec_text" not in st.session_state:
     st.session_state.spec_text = ""
 
 # User input
-user_prompt = st.sidebar.text_area("Enter your main request:", "")
-enhancement_prompt = st.sidebar.text_area("Enhancement / refine output:", "")
+user_prompt = st.sidebar.text_area("Enter your main prompt to design:", "")
+enhancement_prompt = st.sidebar.text_area("Enhancement Inputs:", "")
 
-tabs = st.tabs(["📂 Project Structure", "💻 Code Viewer", "🛠️ Agent Logs", "🚀 Live Preview"])
+tabs = st.tabs(["Project Structure", "Code Viewer", "Agent Logs", "Live Preview", "How to Use"])
 
 frontend_files = st.session_state.frontend_files
 
@@ -99,3 +101,13 @@ with tabs[3]:
         st.components.v1.html(html_content, height=600, scrolling=True)
     else:
         st.write("Live preview will appear here once frontend files are generated.")
+
+with tabs[4]:
+    st.write("Readme - How to use this:")
+    st.write("1. Enter your main request in the sidebar.")
+    st.write("2. Agent logs will help you track the progress and decisions made by the agents.")
+    st.write("3. If you want to enhance the output, provide an enhancement prompt after the first output")
+    st.write("4. View the generated project files and logs in the respective tabs.")
+    st.write("5. Use the code editor to modify files and save changes.")
+
+
