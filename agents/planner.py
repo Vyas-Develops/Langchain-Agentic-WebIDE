@@ -2,7 +2,7 @@
 import os
 import json
 import re
-from langchain_openai import ChatOpenAI
+from langchain.chat_models import ChatOpenAI
 
 def extract_json(text: str) -> str:
     """Extract the first JSON array from the response text."""
@@ -19,7 +19,7 @@ def planner_agent(prompt: str, api_key: str) -> list:
     if not prompt.strip():
         return []
 
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.2, api_key=api_key)
+    llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.2, api_key=api_key)
 
     planner_prompt = f"""
     You are a **software planning agent**.

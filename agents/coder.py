@@ -1,20 +1,19 @@
 # agents/coder.py
 import json
-from langchain_openai import ChatOpenAI
+from langchain.chat_models import ChatOpenAI   
 from langchain.schema import HumanMessage
 
-
 def coder_agent(
-    task_text: str,
+    tasks: list,
     api_key: str = None,
     existing_files: dict = None,
     spec_text: str = None
 ) -> dict:
     """
-    Coder Agent: Generates or enhances frontend code (HTML, CSS, JS).
+    Coder Agent: Generates or enhances frontend code (HTML, CSS, JS) for multiple tasks in a single call.
 
     Args:
-        task_text (str): The coding task or enhancement request.
+        tasks (list): List of subtasks, each dict with keys: "task", "type".
         api_key (str, optional): OpenAI API key (if not set globally).
         existing_files (dict, optional): Existing frontend files to enhance.
         spec_text (str, optional): Full project requirements/specification.
@@ -26,22 +25,24 @@ def coder_agent(
               - "script.js"
     """
 
-    # Initialize LLM (low temperature for consistency/reliability)
+    # Combine all tasks into a single string
+    tasks_text = "\n".join([f"- {t['task']} ({t['type']})" for t in tasks])
+
+    # Initialize LLM
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3, api_key=api_key)
 
     # =========================
     # 1. Prepare Prompt
     # =========================
     if existing_files:
-        # Enhancement flow
         prompt = f"""
 You are enhancing an existing frontend project.
 
 Current files:
 {json.dumps(existing_files, indent=2)}
 
-Enhancement request:
-{task_text}
+Enhancement requests (all subtasks):
+{tasks_text}
 
 Full requirements/specification (must always be respected):
 {spec_text}
@@ -55,18 +56,17 @@ Rules:
 - Do not include explanations, markdown formatting, or extra text.
 """
     else:
-        # Fresh generation flow
         prompt = f"""
 You are a frontend developer. Generate a working, responsive frontend app.
 
-Subtask:
-{task_text}
+Subtasks:
+{tasks_text}
 
 Full requirements/specification (must always be respected):
 {spec_text}
 
 Rules:
-- Implement ALL relevant parts of the spec (e.g., expense tracker with categories, table, balance, chart, etc.).
+- Implement ALL relevant parts of the spec.
 - Keep filenames exactly: "index.html", "style.css", "script.js".
 - "index.html" must reference "style.css" and "script.js".
 - If the spec includes charts, use Chart.js via a CDN.
@@ -87,11 +87,10 @@ Rules:
     try:
         files = json.loads(response.content)
     except Exception as e:
-        # Handle JSON parsing errors
         print("Error parsing LLM output:", e)
         print("Raw output:", response.content)
 
-        # Provide safe fallback files
+        # Fallback files
         files = {
             "index.html": "<!DOCTYPE html><html><head></head><body>Error generating HTML</body></html>",
             "style.css": "body { font-family: Arial, sans-serif; background: #f4f4f4; }",
@@ -103,10 +102,6 @@ Rules:
     # =========================
     for fname in ["index.html", "style.css", "script.js"]:
         if fname not in files:
-            if fname == "index.html":
-                # Ensure index.html has a base structure
-                files[fname] = "<!DOCTYPE html><html><head></head><body></body></html>"
-            else:
-                files[fname] = ""
+            files[fname] = "<!DOCTYPE html><html><head></head><body></body></html>" if fname == "index.html" else ""
 
     return files
